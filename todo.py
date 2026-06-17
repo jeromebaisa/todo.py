@@ -24,7 +24,15 @@ TODO_FILE = TODO_PATH / Path('todo.yml')
 
 
 def get_args():
-    import argparse
+    """
+    Create and return command-line arguments for the todo program.
+
+    This function sets up the main parser, subcommands, aliases, and options
+    that allow users to add, list, and complete tasks from the terminal.
+
+    Returns:
+        argparse.Namespace: The parsed command-line arguments.
+    """
 
     # create top level parser
     parser = argparse.ArgumentParser(description='Manage a todo list.')
@@ -276,6 +284,17 @@ def flatten(list_of_lists):
 
 
 def pretty_print(list_of_strings, padding=2, outline='#'):
+    """
+    Print a list of strings inside a formatted text box.
+
+    Args:
+        list_of_strings (list): The strings to display.
+        padding (int): The amount of blank space around the text.
+        outline (str): The character used to create the box border.
+
+    Returns:
+        None
+    """
     try:
         length_of_longest_string = max([len(i) for i in list_of_strings])
     except ValueError:
@@ -295,11 +314,30 @@ def pretty_print(list_of_strings, padding=2, outline='#'):
         print(line)
 
 def ugly_print(list_of_strings):
+    """
+    Print each string in a list without extra formatting.
+
+    Args:
+        list_of_strings (list): The strings to print.
+
+    Returns:
+        None
+    """
     for line in list_of_strings:
         print(line)
 
 
 def main():
+    """
+    Run the todo command-line program.
+
+    This function reads the user's command-line input, loads the saved task
+    list, performs the selected action, and saves any updated tasks back to
+    the todo file.
+
+    Returns:
+        None
+    """
     args = get_args()
     if args.ugly:
         print_out = ugly_print
