@@ -1,166 +1,256 @@
 # todo.py
 
-## Examples
+A lightweight command-line task manager written in Python that helps you organize tasks by priority. Tasks are stored in YAML format and can be easily managed from the terminal.
 
-	$ todo
-	#################
-	#               #
-	#               #
-	#      Eat      #
-	#               #
-	#               #
-	#################
-	$ todo ls
-	######################
-	#                    #
-	#                    #
-	#       0. Eat       #
-	#      1. Sleep      #
-	#      2. Clean      #
-	#                    #
-	#                    #
-	######################
-	$ todo now Install todo.py
-	$ todo ls
-	################################
-	#                              #
-	#                              #
-	#      0. Install todo.py      #
-	#            1. Eat            #
-	#           2. Sleep           #
-	#                              #
-	#                              #
-	################################
-	$ todo ls -a
-	################################
-	#                              #
-	#                              #
-	#      0. Install todo.py      #
-	#            1. Eat            #
-	#           2. Sleep           #
-	#           3. Clean           #
-	#         4. Exercise          #
-	#                              #
-	#                              #
-	################################
-	$ todo done
-	Install todo.py is done!
-	$ todo ls
-	######################
-	#                    #
-	#                    #
-	#       0. Eat       #
-	#      1. Sleep      #
-	#      2. Clean      #
-	#                    #
-	#                    #
-	######################
+## Features
 
-## Install
+* Add tasks to different priority levels:
 
-Clone this repository:
+  * **Now** (highest priority)
+  * **Soon**
+  * **Later**
+  * **Maybe** (lowest priority)
+* View your current task instantly
+* List tasks with indexes
+* Mark tasks as completed
+* Store tasks in a YAML file
+* Support custom storage locations using the `TODO_PATH` environment variable
+* Optional simplified output mode
 
-    git clone https://github.com/daviewales/todo.py.git
-    
-Navigate to `todo.py`:
+---
 
-    cd todo.py
+## Installation
 
-Install dependencies (PyYaml):
+### 1. Clone the repository
 
-    pip3 install -r requirements.txt
+```bash
+git clone https://github.com/daviewales/todo.py.git
+cd todo.py
+```
 
-Link `todo.py` to somewhere in your `$PATH`:
+### 2. Install dependencies
 
-    ln -s /path/to/todo.py ~/bin/todo
+```bash
+pip3 install -r requirements.txt
+```
 
-Run `todo -h`.
+### 3. Add todo.py to your PATH
 
-Profit!
+```bash
+ln -s /path/to/todo.py ~/bin/todo
+```
+
+### 4. Verify installation
+
+```bash
+todo -h
+```
+
+---
+
+## Quick Start
+
+Add a task that needs immediate attention:
+
+```bash
+todo now "Finish homework"
+```
+
+Add a task for later:
+
+```bash
+todo later "Update resume"
+```
+
+View current tasks:
+
+```bash
+todo ls
+```
+
+Mark the current task as completed:
+
+```bash
+todo done
+```
+
+---
 
 ## Usage
 
-`todo.py` creates two lists. The first list contains things ordered from `now`, to `soon`. The second list contains things ordered from `later` to `maybe`.
+### View Current Task
 
-### Default command
+Running the command without arguments displays the highest-priority task.
 
-`todo` with no arguments lists the current task.
+```bash
+todo
+```
 
-### Adding tasks
+### Add Tasks
 
-`todo now Task` adds `Task` to the beginning of the first list. `todo soon Task` adds `Task` to the end of the first list. `todo later` and `todo maybe` do the same thing with the second list.
+| Command      | Description                                          |
+| ------------ | ---------------------------------------------------- |
+| `todo now`   | Add task to the beginning of the active task list    |
+| `todo soon`  | Add task to the end of the active task list          |
+| `todo later` | Add task to the beginning of the secondary task list |
+| `todo maybe` | Add task to the end of the secondary task list       |
 
-Short versions of these commands are:
+Examples:
 
-- `todo now`: `todo n`
-- `todo soon`: `todo s`
-- `todo later`: `todo l`
-- `todo maybe`: `todo m`
+```bash
+todo now "Submit project"
+todo soon "Buy groceries"
+todo later "Read a book"
+todo maybe "Learn Rust"
+```
 
+#### Short Commands
 
-### Listing tasks
+| Full Command | Shortcut  |
+| ------------ | --------- |
+| `todo now`   | `todo n`  |
+| `todo soon`  | `todo s`  |
+| `todo later` | `todo l`  |
+| `todo maybe` | `todo m`  |
+| `todo list`  | `todo ls` |
 
-`todo list` lists tasks with indexes. Optionally provide a count to list more than three tasks. See `todo list -h` for more options.
+---
 
-`todo list` has a short version: `todo ls`.
+### List Tasks
 
-### Deleting tasks
+Display the top three tasks:
 
-`todo done` deletes the current task. Optionally provide a task index to delete tasks out of order. (Use `todo list` to determine task indexes.) See `todo done -h` for more options.
+```bash
+todo list
+```
 
-`todo done` does not have a short version, because it is a destructive operation.
+Display all tasks:
 
-### Structure of todo.yml file
+```bash
+todo list --all
+```
 
-These lists are stored in a `yaml` file with the following structure:
+Display tasks in reverse order:
 
-    - Eat
-    - Sleep
-    ---
-    - Clean
-    - Exercise
+```bash
+todo list --from-end
+```
 
-The default location of the yaml file is `~/.todo/todo.yml`. It is placed into a hidden directory, rather than as a hidden file in the home directory to allow the use of programs such as [Syncthing](https://syncthing.net/) to synchronise your tasks between computers and devices.
+Display a specific number of tasks:
 
-### TODO_PATH Environment variable
+```bash
+todo list 10
+```
 
-`todo.py` supports the environment variable `TODO_PATH`. The value of `TODO_PATH` must be a path to a directory.
-For example the following will create a todo list in the Desktop folder, and add 'Sleep' as the current task:
+---
 
-    TODO_PATH="~/Desktop" todo now Sleep
+### Complete Tasks
 
-This may be useful if you need to store your `todo.py` file in a different directory to the default, such as when running in Termux on Android.
+Complete the current task:
 
-### Ugly mode
+```bash
+todo done
+```
 
-By default, `todo.py` outputs tasks enclosed by a border of '#' symbols.
-Passing the command-line argument `--ugly` or `-u` will display the tasks in a more straightforward manner.
+Complete a specific task by index:
 
-### Running in Termux on Android
+```bash
+todo done 2
+```
 
-`todo.py` should work find in Termux.
-However, there are a number of tweaks that you may wish to use.
+---
 
-You will need to edit the following file:
+## Task Storage
 
-    /data/data/com.termux/file/usr/etc/bash.bashrc
+Tasks are stored in a YAML file with the following structure:
 
-Add the following lines:
+```yaml
+- Eat
+- Sleep
+---
+- Clean
+- Exercise
+```
 
-    export TODO_PATH="~/storage/shared/todo"
-    alias todo="todo -u"
+By default, tasks are saved in:
 
-This assumes that you have linked `todo.py` to somewhere in your path, using `todo` as the name of the link.
+```text
+~/.todo/todo.yml
+```
 
-This will change the default directory to one which is writable by Termux.
-It will also use 'Ugly mode' for outputting tasks, which works better on a small display.
+The first list contains higher-priority tasks (`now` and `soon`), while the second list contains lower-priority tasks (`later` and `maybe`).
 
-### Testing
+---
 
-Run doctests (Use `-v` flag for more info):
+## Custom Storage Location
 
-    python3 -m doctest todo.py
-    
-OR
+You can override the default storage location using the `TODO_PATH` environment variable.
 
-    nosetests --with-doctest todo.py
+Example:
+
+```bash
+TODO_PATH="~/Desktop" todo now "Sleep"
+```
+
+This creates the todo file inside the Desktop directory instead of the default location.
+
+---
+
+## Ugly Mode
+
+By default, tasks are displayed inside a decorative border.
+
+Enable plain text output using:
+
+```bash
+todo --ugly
+```
+
+or
+
+```bash
+todo -u
+```
+
+This mode is useful for small terminals or scripting.
+
+---
+
+## Running on Android (Termux)
+
+Edit:
+
+```bash
+/data/data/com.termux/files/usr/etc/bash.bashrc
+```
+
+Add:
+
+```bash
+export TODO_PATH="~/storage/shared/todo"
+alias todo="todo -u"
+```
+
+This stores tasks in shared storage and enables plain text output by default.
+
+---
+
+## Testing
+
+Run the built-in doctests:
+
+```bash
+python3 -m doctest todo.py
+```
+
+Verbose output:
+
+```bash
+python3 -m doctest -v todo.py
+```
+
+Using nose:
+
+```bash
+nosetests --with-doctest todo.py
+```
