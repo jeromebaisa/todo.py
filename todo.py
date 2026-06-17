@@ -14,12 +14,17 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
+# Try to use a custom storage directory if the user has set TODO_PATH.
 try:
     TODO_PATH = Path(environ['TODO_PATH']).expanduser()
 except KeyError:
+    # Otherwise use the default hidden todo directory in the user's home folder.
     TODO_PATH = Path('~/.todo').expanduser()
+
+# Create the todo directory if it does not already exist.
 Path.mkdir(TODO_PATH, exist_ok=True)
 
+# Full path to the YAML file where tasks are stored.
 TODO_FILE = TODO_PATH / Path('todo.yml')
 
 
@@ -34,9 +39,13 @@ def get_args():
         argparse.Namespace: The parsed command-line arguments.
     """
 
+    import argparse
+
     # create top level parser
     parser = argparse.ArgumentParser(description='Manage a todo list.')
     parser.add_argument('--ugly', '-u', action='store_true', help='No pretty printing!')
+
+    # Set up subcommands such as now, soon, later, maybe, list, and done.
     subparsers = parser.add_subparsers(dest='subparser_name', help='View help for sub-commands with "%(prog)s command -h"')
 
     # create parser for the 'now' command
@@ -66,6 +75,7 @@ def get_args():
     parser_done.add_argument('task_index', metavar='index', type=int, nargs='?', default=0, help='Index of task to delete. (Use `list` subcommand to determine index).')
     parser_done.add_argument('--interactive', '-i', action='store_true', help='Interactive completion mode. (Useful for completing tasks out of order!)')
 
+    # Return the parsed command-line input.
     return parser.parse_args()
 
 
@@ -84,6 +94,7 @@ def write_tasks(tasks, todo_file):
     [['Eat', 'Sleep'], ['Clean', 'Exercise']]
     '''
 
+    # Save all task lists to the YAML file.
     with open(todo_file, 'w') as file:
         safe_dump_all(tasks, file, default_flow_style=False)
 
@@ -111,6 +122,7 @@ def add_task_to_now(task, task_lists):
     [['Clean', 'Eat', 'Sleep'], []]
     '''
 
+    # Insert the task at the beginning of the high-priority list.
     task_lists[0].insert(0, task)
 
 
@@ -124,6 +136,7 @@ def add_task_to_soon(task, task_lists):
     [['Eat', 'Sleep', 'Clean'], []]
     '''
 
+    # Add the task to the end of the high-priority list.
     task_lists[0].append(task)
 
 
@@ -137,6 +150,7 @@ def add_task_to_later(task, task_lists):
     [['Eat', 'Sleep'], ['Exercise', 'Clean']]
     '''
 
+    # Insert the task at the beginning of the lower-priority list.
     task_lists[1].insert(0, task)
 
 
@@ -150,6 +164,7 @@ def add_task_to_maybe(task, task_lists):
     [['Eat', 'Sleep'], ['Clean', 'Exercise']]
     '''
 
+    # Add the task to the end of the lower-priority list.
     task_lists[1].append(task)
 
 
@@ -178,13 +193,19 @@ def delete_task(task_index, task_lists):
     True
     '''
 
+    # Keep track of which internal task list contains the requested task.
     list_index = 0
+
+    # Search through each task list until the correct index is found.
     for task_list in task_lists:
         if task_index > len(task_list) - 1:
+            # Move to the next task list and adjust the index accordingly.
             list_index += 1
             task_index -= len(task_list)
         else:
             break
+
+    # Remove and return the selected task.
     return task_lists[list_index].pop(task_index)
 
 
@@ -236,12 +257,15 @@ def list_tasks(tasks, n=3, all_tasks=False, from_beginning=True):
     ['Exercise', 'Clean', 'Sleep', 'Eat']
     '''
 
+    # Override the requested count and return every task.
     if all_tasks:
         n = len(tasks)
 
+    # Return tasks from highest priority to lowest priority.
     if from_beginning:
         return tasks[:n]
     else:
+        # Return tasks in reverse order.
         return tasks[-1:-n-1:-1]
 
 
@@ -257,8 +281,10 @@ def current_task(tasks):
     '''
 
     try:
+        # The first task is always considered the current task.
         return tasks[0]
     except IndexError as err:
+        # Handle an empty task list gracefully.
         return 'The task list is empty!'
 
 
@@ -273,12 +299,17 @@ def flatten(list_of_lists):
     [1, 2, 3, 4, 5, 6]
     '''
 
+    # Store all flattened values in a single list.
     flat_list = []
+
+    # Go through each item in the provided list.
     for item in list_of_lists:
         if type(item) == list:
+            # Recursively flatten nested lists.
             item = flatten(item)
             flat_list.extend(item)
         else:
+            # Add non-list values directly to the result.
             flat_list.append(item)
     return flat_list
 
@@ -296,20 +327,34 @@ def pretty_print(list_of_strings, padding=2, outline='#'):
         None
     """
     try:
+        # Find the longest string so the box can be sized correctly.
         length_of_longest_string = max([len(i) for i in list_of_strings])
     except ValueError:
+        # Use zero length when the list is empty.
         length_of_longest_string = 0
+
+    # Calculate the width and height of the printed box.
     width = length_of_longest_string + 2 * (3*padding + 1)
     height = 1 + 2 * (padding + 1)
+
+    # Build the top and bottom border of the box.
     top_bottom_string = outline * width
+
+    # Build blank padding rows inside the box.
     padding_string = outline + ' ' * (width - 2) + outline
+
+    # Center each string within the printable area.
     pretty_list_of_strings = [outline + line.center(width-2) + outline for line in list_of_strings]
+
+    # Store each printed row before displaying it.
     lines = []
     lines.append(top_bottom_string)
     lines.extend([padding_string] * padding)
     lines.extend(pretty_list_of_strings)
     lines.extend([padding_string] * padding)
     lines.append(top_bottom_string)
+
+    # Print the formatted output one line at a time.
     for line in lines:
         print(line)
 
@@ -323,6 +368,7 @@ def ugly_print(list_of_strings):
     Returns:
         None
     """
+    # Print each task exactly as plain text.
     for line in list_of_strings:
         print(line)
 
@@ -338,38 +384,55 @@ def main():
     Returns:
         None
     """
+    # Parse command-line arguments provided by the user.
     args = get_args()
+
+    # Select the output format based on the user's preference.
     if args.ugly:
         print_out = ugly_print
     else:
         print_out = pretty_print
 
     try:
+        # Load saved tasks from disk.
         task_lists = load_tasks(TODO_FILE)
     except FileNotFoundError:
+        # Create empty task lists if no todo file exists yet.
         task_lists = [[],[]]
 
     if args.subparser_name in ['now', 'n']:
+        # Join multiple words into one task string.
         task = ' '.join(args.task)
         add_task_to_now(task, task_lists)
         write_tasks(task_lists, TODO_FILE)
     elif args.subparser_name in ['soon', 's']:
+        # Join multiple words into one task string.
         task = ' '.join(args.task)
         add_task_to_soon(task, task_lists)
         write_tasks(task_lists, TODO_FILE)
     elif args.subparser_name in ['later', 'l']:
+        # Join multiple words into one task string.
         task = ' '.join(args.task)
         add_task_to_later(task, task_lists)
         write_tasks(task_lists, TODO_FILE)
     elif args.subparser_name in ['maybe', 'm']:
+        # Join multiple words into one task string.
         task = ' '.join(args.task)
         add_task_to_maybe(task, task_lists)
         write_tasks(task_lists, TODO_FILE)
     elif args.subparser_name in ['list', 'ls']:
+        # Merge all task lists into a single list for display purposes.
         merged_task_lists = flatten(task_lists)
+
+        # Store the total number of tasks.
         count = len(merged_task_lists)
+
+        # Add numeric indexes so tasks can be referenced with the done command.
         numbered_tasks = [f'{str(count)}. {line}' for count, line in enumerate(merged_task_lists)]
+
+        # Apply the user's list options before printing.
         task_list = list_tasks(numbered_tasks, n=args.task_count, all_tasks=args.all, from_beginning=not args.from_end)
+
         if len(task_list) > 0:
             print_out(task_list)
         else:
@@ -378,13 +441,16 @@ def main():
         if args.interactive:
             print('This option is not implemented yet')
         else:
+            # Delete the selected task and show the completed task message.
             deleted_task = delete_task(args.task_index, task_lists)
             print(f'{deleted_task} is done!')
             write_tasks(task_lists, TODO_FILE)
     else:
+        # If no subcommand is given, print the current task.
         print_out([current_task(flatten(task_lists))])
 
 
 
 if __name__ == '__main__':
     main()
+
